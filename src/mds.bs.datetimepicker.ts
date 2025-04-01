@@ -424,11 +424,13 @@ data-bs-toggle="dropdown" aria-expanded="false">
 
   // #region Properties
 
-  guid: string = '';
-  setting: MdsPersianDateTimePickerSetting;
+  readonly guid: string = '';
+  readonly setting: MdsPersianDateTimePickerSetting;
+
+  private readonly element: Element;
+
   private bsPopover: Popover | null = null;
   private bsModal: Modal | null = null;
-  private element: Element;
   private tempTitleString = '';
 
   // #endregion
@@ -439,9 +441,12 @@ data-bs-toggle="dropdown" aria-expanded="false">
 
     // Validation
 
-    if (setting.rangeSelector && (setting.toDate || setting.fromDate)) throw new Error(`MdsPersianDateTimePicker => You can not set true 'toDate' or 'fromDate' and 'rangeSelector' together`);
-    if (setting.toDate && setting.fromDate) throw new Error(`MdsPersianDateTimePicker => You can not set true 'toDate' and 'fromDate' together`);
-    if (!setting.groupId && (setting.toDate || setting.fromDate)) throw new Error(`MdsPersianDateTimePicker => When you set 'toDate' or 'fromDate' true, you have to set 'groupId'`);
+    if (setting.rangeSelector && (setting.toDate || setting.fromDate))
+      throw new Error(`MdsPersianDateTimePicker => You can not set true 'toDate' or 'fromDate' and 'rangeSelector' together`);
+    if (setting.toDate && setting.fromDate)
+      throw new Error(`MdsPersianDateTimePicker => You can not set true 'toDate' and 'fromDate' together`);
+    if (!setting.groupId && (setting.toDate || setting.fromDate))
+      throw new Error(`MdsPersianDateTimePicker => When you set 'toDate' or 'fromDate' true, you have to set 'groupId'`);
 
     // ---------------------
 
@@ -741,9 +746,6 @@ data-bs-toggle="dropdown" aria-expanded="false">
   private static convertToNumber3(dateTime: Date): number {
     return MdsPersianDateTimePicker.convertToNumber1(MdsPersianDateTimePicker.getDateTimeJson1(dateTime));
   }
-  // private static convertToNumber4(dateTime: Date): number {
-  //   return Number(MdsPersianDateTimePicker.zeroPad(dateTime.getFullYear()) + MdsPersianDateTimePicker.zeroPad(dateTime.getMonth()) + MdsPersianDateTimePicker.zeroPad(dateTime.getDate()));
-  // }
   private static correctOptionValue(optionName: string, value: any): any {
     const setting = new MdsPersianDateTimePickerSetting();
     Object.keys(setting).filter(key => key === optionName).forEach(key => {
@@ -1775,7 +1777,7 @@ data-bs-toggle="dropdown" aria-expanded="false">
       if (setting.modalMode)
         containerElement = containerElement.querySelector('[data-name="mds-dtp-body"]');
     }
-    if (containerElement == null) {
+    if (!containerElement) {
       console.error("mds.bs.datetimepicker: `data-mds-dtp-guid` element not found!")
       return;
     }
@@ -1787,10 +1789,8 @@ data-bs-toggle="dropdown" aria-expanded="false">
   }
   private changeMonth = (element: Element): void => {
     const instance = MdsPersianDateTimePicker.getInstance(element);
-    if (!instance) {
+    if (!instance || instance.setting.disabled)
       return;
-    }
-    if (instance.setting.disabled) return;
     const dateNumber = Number(element.getAttribute('data-number'));
     const setting = instance.setting;
     let selectedDateToShow = MdsPersianDateTimePicker.getClonedDate(setting.selectedDateToShow);
@@ -1890,34 +1890,35 @@ data-bs-toggle="dropdown" aria-expanded="false">
       const toDateElement = document.querySelector(`[data-mds-dtp-group="${setting.groupId}"][data-to-date]`);
       const fromDateElement = document.querySelector(`[data-mds-dtp-group="${setting.groupId}"][data-from-date]`);
       if (setting.fromDate && toDateElement != undefined) {
-        const instance = MdsPersianDateTimePicker.getInstance(toDateElement);
-        if (instance != null) {
+        const toDateInstance = MdsPersianDateTimePicker.getInstance(toDateElement);
+        if (toDateInstance != null) {
           if (setting.inLine)
-            this.updateCalendarBodyHtml(toDateElement, instance.setting);
+            this.updateCalendarBodyHtml(toDateElement, toDateInstance.setting);
           else
-            instance.initializeBsPopover(instance.setting);
+            toDateInstance.initializeBsPopover(toDateInstance.setting);
         }
       } else if (setting.toDate && fromDateElement != undefined) {
-        const instance = MdsPersianDateTimePicker.getInstance(fromDateElement);
-        if (instance != null) {
+        const fromDateInstance = MdsPersianDateTimePicker.getInstance(fromDateElement);
+        if (fromDateInstance != null) {
           if (setting.inLine)
-            this.updateCalendarBodyHtml(fromDateElement, instance.setting);
+            this.updateCalendarBodyHtml(fromDateElement, fromDateInstance.setting);
           else
-            instance.initializeBsPopover(instance.setting);
+            fromDateInstance.initializeBsPopover(fromDateInstance.setting);
         }
       } else
         this.updateCalendarBodyHtml(element, setting);
-    } else {
+    } else
       this.updateCalendarBodyHtml(element, setting, true);
-    }
     if (setting.onDayClick != undefined)
       setting.onDayClick(setting);
     if (!setting.inLine) {
       instance.hide();
     } else {
       // حذف روزهای انتخاب شده در تقویم این لاین
-      element.closest(`[data-mds-dtp-guid="${this.guid}"]`)!
-        .querySelectorAll('[data-day]')
+      let dtp = element.closest(`[data-mds-dtp-guid="${this.guid}"]`);
+      if (!dtp)
+        dtp = document.querySelector(`[data-mds-dtp-guid="${this.guid}"]`);
+      dtp!.querySelectorAll(`[data-day]:not([data-number="${element.getAttribute('data-number')}"])`)
         .forEach(e => e.removeAttribute('data-mds-dtp-selected-day'));
     }
   }
@@ -1977,7 +1978,8 @@ data-bs-toggle="dropdown" aria-expanded="false">
   private goToday = (e: Event): void => {
     const element = <Element>e.target;
     const instance = MdsPersianDateTimePicker.getInstance(element);
-    if (!instance) return;
+    if (!instance)
+      return;
     const setting = instance.setting;
     setting.selectedDateToShow = new Date();
     MdsPersianDateTimePickerData.set(instance.guid, instance);
@@ -2089,7 +2091,8 @@ data-bs-toggle="dropdown" aria-expanded="false">
     MdsPersianDateTimePickerData.getAll().forEach(i => i.hide());
     const element = <Element>e.target;
     const instance = MdsPersianDateTimePicker.getInstance(element);
-    if (instance == null || instance.setting.disabled) return;
+    if (!instance || instance.setting.disabled)
+      return;
     instance.show();
   }
   private hidePopoverEvent = (e: Event): void => {

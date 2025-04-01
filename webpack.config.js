@@ -34,9 +34,9 @@ module.exports = {
     }, {
       test: /.s?css$/,
       use: [{
-          loader: MiniCssExtractPlugin.loader,
-          options: {}
-        },
+        loader: MiniCssExtractPlugin.loader,
+        options: {}
+      },
         'css-loader'
       ],
     }],
@@ -81,9 +81,9 @@ module.exports = {
       banner: `
 Bootstrap 5+ Persian Date Time Picker
 https://github.com/Mds92/MD.BootstrapPersianDateTimePicker
-version : 4.2.6
-Written By Mohammad Dayyan, Mordad 1397 - 1402
-mds.soft@gmail.com - @mdssoft
+version : 4.4.0
+Written By Mohammad Dayyan, Mordad 1397 - 1404
+mds_soft@yahoo.com - @mds1401
       `
     })
   ]
