@@ -179,8 +179,8 @@ var vueApp = new Vue({
       }
       this.dateChange(optionName);
     },
-    getDateMethod: function () {
-      alert(dtp1.getDate());
+    getSelectedDateMethod: function () {
+      alert(dtp1.getSelectedDate());
     },
   }
 });
